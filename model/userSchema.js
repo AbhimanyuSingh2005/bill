@@ -18,18 +18,15 @@ const userSchema = new mongoose.Schema({
         type:Number,
         default:0
     },
-    credits : [
+    transaction : [
         {
             reason:String,
             amount:Number,
-            date : Date
-        }
-    ],
-    debits : [
-        {
-            itemName:String,
-            itemPrice:Number,
-            date : Date
+            date : String,
+            debit : {
+                type:Boolean,
+                default:false
+            }
         }
     ]
 });

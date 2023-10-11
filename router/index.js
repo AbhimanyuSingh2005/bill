@@ -8,7 +8,7 @@ const date = new Date();
 function getDate (){
     const options = {
         day : "numeric",
-        month : "short",
+        month : "numeric",
         year : "numeric"
     }
     return date.toLocaleDateString("en-US",options);
@@ -18,34 +18,31 @@ router.get('/bill',checkAuthenticated,async (req, res) => {
     try{
         const today = getDate();
         const user = await User.findById(req.user.id);
-        res.json({'credit':user.credits,'debits':user.debits,'message':"succesfully welcome to bill"}).status(200);
+        const credit = user.transaction.filter((item)=>item.debit===false);
+        const debit = user.transaction.filter((item)=>item.debit===true);
+        res.json({'amount':user.amount,'transaction':user.transaction,'credit':credit,'debit':debit,'message':"succesfully welcome to bill"}).status(200);
     }catch(err){
         console.log(err);
     }
 });
 
-router.post('/credit',checkAuthenticated,async(req,res)=>{
+router.post('/update',checkAuthenticated,async(req,res)=>{
     try{
         const user = await User.findById(req.user.id);
-        const credit = req.body;
-        credit.date = getDate();
-        const amount = user.amount + (Number)(credit.amount);
-        await User.findByIdAndUpdate(req.user.id,{amount:amount,$push:{credits:credit}});
-        res.json({'message':"succesfully registered the credit amount"}).status(200);
-    }catch(err){
-        console.log(err);
-    }
-});
-
-router.post('/debit',checkAuthenticated,async(req,res)=>{
-    try{
-        const user = await User.findById(req.user.id);
-        const debit = req.body;
-        console.log(debit);
-        debit.date = getDate();
-        const amount = user.amount - (Number)(debit.itemPrice);
-        await User.findByIdAndUpdate(req.user.id,{amount:amount,$push:{debits:debit}});
-        res.json({'message':"succesfully registered the debit amount"}).status(200);
+        const update = req.body;
+        console.log(update);
+        update.debit = (Number)(update.debit);
+        update.date = getDate();
+        var amount = user.amount;
+        if(update.debit){
+            amount = user.amount - (Number)(update.amount);
+            console.log(amount);
+        }else{
+            amount = user.amount + (Number)(update.amount);
+            console.log(amount);
+        }
+        await User.findByIdAndUpdate(req.user.id,{amount:amount,$push:{transaction:update}});
+        res.json({'message':"succesfully registered the update amount"}).status(200);
     }catch(err){
         console.log(err);
     }
